@@ -47,6 +47,38 @@ namespace Fluent11Helper
         private bool micaEnabled = true;
         public bool MicaEnabled { get => micaEnabled; set => SetValue(ref micaEnabled, value); }
 
+        private bool acrylicBackdrop = false;
+        public bool AcrylicBackdrop { get => acrylicBackdrop; set => SetValue(ref acrylicBackdrop, value); }
+
+        private string acrylicTintDark = AcrylicTint.DefaultDark;
+        public string AcrylicTintDark
+        {
+            get => acrylicTintDark;
+            set => SetTint(ref acrylicTintDark, value);
+        }
+
+        private string acrylicTintLight = AcrylicTint.DefaultLight;
+        public string AcrylicTintLight
+        {
+            get => acrylicTintLight;
+            set => SetTint(ref acrylicTintLight, value);
+        }
+
+        private void SetTint(ref string field, string value, [System.Runtime.CompilerServices.CallerMemberName] string name = null)
+        {
+            var normalized = AcrylicTint.Normalize(value);
+            if (normalized == null)
+            {
+                OnPropertyChanged(name);
+                return;
+            }
+
+            SetValue(ref field, normalized, name);
+        }
+
+        private bool mainAreaPanel = true;
+        public bool MainAreaPanel { get => mainAreaPanel; set => SetValue(ref mainAreaPanel, value); }
+
         private bool windowsAccentColor = true;
         public bool WindowsAccentColor { get => windowsAccentColor; set => SetValue(ref windowsAccentColor, value); }
 
@@ -259,6 +291,16 @@ namespace Fluent11Helper
 
         [DontSerialize]
         public int ColorModeIndex { get => (int)Mode; set { Mode = (ColorMode)value; OnPropertyChanged(); } }
+
+        [DontSerialize]
+        public int BackdropIndex
+        {
+            get => !MicaEnabled ? 0 : AcrylicBackdrop ? 2 : 1;
+            set { MicaEnabled = value > 0; AcrylicBackdrop = value == 2; OnPropertyChanged(); OnPropertyChanged(nameof(AcrylicSelected)); }
+        }
+
+        [DontSerialize]
+        public bool AcrylicSelected => MicaEnabled && AcrylicBackdrop;
 
         [DontSerialize]
         public int GridDetailsIndex

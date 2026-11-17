@@ -66,7 +66,7 @@ Light on resources.
 ## More features
 
 - Controls, right-click menu and dialogs rebuilt in the Windows 11 style
-- Mica background
+- Mica or Acrylic background
 - Covers that grow and shrink with the window
 - Dialogs and add-on windows open centered over Playnite
 - Screenshots in the game details (with Screenshot Utilities), with optional black bar cropping

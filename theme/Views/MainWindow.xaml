@@ -52,7 +52,17 @@
                                 <Grid DockPanel.Dock="Top">
                                     <Border Margin="0,48,0,0" Background="{DynamicResource ContentLayerBrush}"
                                             BorderBrush="{DynamicResource ControlStrokeBrush}" BorderThickness="1,1,0,0"
-                                            CornerRadius="8,0,0,0" IsHitTestVisible="False" />
+                                            CornerRadius="8,0,0,0" IsHitTestVisible="False">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{PluginSettings Plugin=Fluent11Helper, Path=MainAreaPanel, FallbackValue=True}" Value="False">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                    </Border>
                                     <ContentControl Name="PART_ContentView" FocusVisualStyle="{x:Null}">
                                         <ContentControl.Template>
                                             <ControlTemplate TargetType="ContentControl">

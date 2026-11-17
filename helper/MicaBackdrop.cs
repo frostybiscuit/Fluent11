@@ -13,6 +13,7 @@ namespace Fluent11Helper
         private const int DWMWA_SYSTEMBACKDROP_TYPE = 38;
         private const int DWMSBT_AUTO = 0;
         private const int DWMSBT_MAINWINDOW = 2;
+        private const int DWMSBT_TRANSIENTWINDOW = 3;
 
         private static readonly DependencyProperty OriginalColorProperty =
             DependencyProperty.RegisterAttached("OriginalColor", typeof(Color?), typeof(MicaBackdrop), new PropertyMetadata(null));
@@ -68,7 +69,7 @@ namespace Fluent11Helper
             }
         }
 
-        public static bool Enable(Window window, Brush tint)
+        public static bool Enable(Window window, Brush tint, bool acrylic = false)
         {
             var hwnd = new WindowInteropHelper(window).Handle;
             if (hwnd == IntPtr.Zero || window.AllowsTransparency)
@@ -76,8 +77,10 @@ namespace Fluent11Helper
                 return false;
             }
 
+            var backdrop = acrylic ? DWMSBT_TRANSIENTWINDOW : DWMSBT_MAINWINDOW;
             if (window.GetValue(OriginalColorProperty) != null)
             {
+                DwmSetWindowAttribute(hwnd, DWMWA_SYSTEMBACKDROP_TYPE, ref backdrop, sizeof(int));
                 window.Background = tint;
                 return true;
             }
@@ -88,7 +91,6 @@ namespace Fluent11Helper
                 return false;
             }
 
-            var backdrop = DWMSBT_MAINWINDOW;
             if (DwmSetWindowAttribute(hwnd, DWMWA_SYSTEMBACKDROP_TYPE, ref backdrop, sizeof(int)) != 0)
             {
                 return false;

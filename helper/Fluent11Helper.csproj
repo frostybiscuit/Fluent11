@@ -5,7 +5,7 @@
     <AssemblyName>Fluent11Helper</AssemblyName>
     <RootNamespace>Fluent11Helper</RootNamespace>
     <LangVersion>7.3</LangVersion>
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
   </PropertyGroup>
