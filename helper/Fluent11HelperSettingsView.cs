@@ -7,7 +7,9 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Media;
+using System.Windows.Input;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 
 namespace Fluent11Helper
 {
@@ -56,8 +58,15 @@ namespace Fluent11Helper
             Group(panel, "Appearance",
                 Choice("\uE771", "Color scheme", "Light or dark Fluent 11 colors. Automatic follows the Windows app mode", "Settings.ColorModeIndex", null,
                     "Automatic", "Light", "Dark"),
-                Row("\uE7F4", "Mica background", "The real Windows 11 Mica material, tinted by the desktop", "Settings.MicaEnabled",
-                    "Windows 11 22H2 or later"),
+                Choice("\uE7F4", "Window background", "Real Windows 11 materials. Mica is tinted by the desktop, Acrylic blurs what is behind the window",
+                    "Settings.BackdropIndex", "Windows 11 22H2 or later",
+                    "Off", "Mica", "Acrylic"),
+                Dependent(ColorEntry("Acrylic tint, dark", "Color laid over the blur in the dark scheme, as #AARRGGBB",
+                    "Settings.AcrylicTintDark", AcrylicTint.DefaultDark), "Settings.AcrylicSelected"),
+                Dependent(ColorEntry("Acrylic tint, light", "Color laid over the blur in the light scheme, as #AARRGGBB",
+                    "Settings.AcrylicTintLight", AcrylicTint.DefaultLight), "Settings.AcrylicSelected"),
+                Row("\uE7C4", "Main area panel", "The tinted panel with a border behind the library and pages. Best turned off when using Acrylic",
+                    "Settings.MainAreaPanel"),
                 Row("\uE790", "Windows accent color", "Uses the accent color chosen in Windows instead of the default blue",
                     "Settings.WindowsAccentColor"),
                 Row("\uE8A7", "Center windows", "Dialogs and add-on windows open centered over the Playnite window",
@@ -268,6 +277,75 @@ namespace Fluent11Helper
             var combo = new ComboBox { ItemsSource = options, MinWidth = 200 };
             combo.SetBinding(Selector.SelectedIndexProperty, new Binding(path) { Mode = BindingMode.TwoWay });
             return ControlRow(icon, title, description, combo, tooltip);
+        }
+
+        private static FrameworkElement ColorEntry(string title, string description, string path, string defaultValue)
+        {
+            var box = new TextBox
+            {
+                Width = 120,
+                MaxLength = 9,
+                VerticalContentAlignment = VerticalAlignment.Center,
+                ToolTip = $"#AARRGGBB, #RRGGBB or #RGB. Default {defaultValue}"
+            };
+            var binding = new Binding(path) { Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.LostFocus };
+            box.SetBinding(TextBox.TextProperty, binding);
+
+            void Commit() => box.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+            void Reload() => box.GetBindingExpression(TextBox.TextProperty)?.UpdateTarget();
+            box.KeyDown += (s, e) =>
+            {
+                if (e.Key == Key.Enter)
+                {
+                    Commit();
+                    Reload();
+                    e.Handled = true;
+                }
+            };
+
+            box.LostFocus += (s, e) => box.Dispatcher.BeginInvoke(new Action(Reload), DispatcherPriority.Input);
+
+            var swatch = new Border
+            {
+                Width = 24,
+                Height = 24,
+                BorderThickness = new Thickness(1),
+                Margin = new Thickness(0, 0, 8, 0),
+                CornerRadius = new CornerRadius(4),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            swatch.SetResourceReference(Border.BorderBrushProperty, "ControlStrokeBrush");
+            swatch.SetBinding(Border.BackgroundProperty, new Binding(path) { Mode = BindingMode.OneWay, Converter = TintBrushConverter.Instance });
+
+            var reset = new Button { Content = "Reset", Margin = new Thickness(8, 0, 0, 0), Padding = new Thickness(10, 4, 10, 4) };
+            reset.Click += (s, e) =>
+            {
+                box.Text = defaultValue;
+                Commit();
+                Reload();
+            };
+
+            var panel = new StackPanel { Orientation = Orientation.Horizontal };
+            panel.Children.Add(swatch);
+            panel.Children.Add(box);
+            panel.Children.Add(reset);
+            return ControlRow(null, title, description, panel, null);
+        }
+
+        private sealed class TintBrushConverter : IValueConverter
+        {
+            public static readonly TintBrushConverter Instance = new TintBrushConverter();
+
+            public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+            {
+                var text = AcrylicTint.Normalize(value as string);
+                return text == null ? Brushes.Transparent : new SolidColorBrush((Color)ColorConverter.ConvertFromString(text));
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+            {
+                throw new NotSupportedException();
+            }
         }
 
         private static FrameworkElement Multi(string icon, string title, string description, Func<Fluent11HelperSettings, string> summary,

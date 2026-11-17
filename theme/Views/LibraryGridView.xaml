@@ -93,6 +93,15 @@
                                            Foreground="{DynamicResource TextBrushDarker}" Style="{StaticResource BaseTextBlockStyle}" />
                             </StackPanel>
                             <Border Grid.RowSpan="2" Height="72" VerticalAlignment="Bottom" IsHitTestVisible="False">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{PluginSettings Plugin=Fluent11Helper, Path=MainAreaPanel, FallbackValue=True}" Value="False">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
                                 <Border.Background>
                                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                                         <GradientStop Offset="0" Color="{DynamicResource LayerFadeColor}" />

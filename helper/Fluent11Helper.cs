@@ -39,6 +39,8 @@ namespace Fluent11Helper
         private bool? currentDark;
         private Color? currentAccent;
         private bool micaActive;
+        private bool acrylicActive;
+        private Brush acrylicTint = Brushes.Transparent;
         private GridDetailsOverlay gridOverlay;
 
         private const double ContentLayerMicaOpacity = 0.7;
@@ -337,7 +339,7 @@ namespace Fluent11Helper
                     }));
                 }
                 SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
-                micaActive = settings.Settings.MicaEnabled && MicaBackdrop.IsSupported();
+                UpdateBackdropState();
                 ApplyScheme(WantsDark());
             }
             catch (Exception e)
@@ -447,7 +449,7 @@ namespace Fluent11Helper
         {
             if (active)
             {
-                micaActive = settings.Settings.MicaEnabled && MicaBackdrop.IsSupported();
+                UpdateBackdropState();
                 ApplyScheme(WantsDark());
                 foreach (Window window in Application.Current.Windows)
                 {
@@ -459,13 +461,27 @@ namespace Fluent11Helper
         private static readonly DependencyProperty HasFallbackBackgroundProperty =
             DependencyProperty.RegisterAttached("HasFallbackBackground", typeof(bool), typeof(Fluent11Helper), new PropertyMetadata(false));
 
+        private void UpdateBackdropState()
+        {
+            micaActive = settings.Settings.MicaEnabled && MicaBackdrop.IsSupported();
+            acrylicActive = micaActive && settings.Settings.AcrylicBackdrop;
+        }
+
+        private void UpdateAcrylicTint(bool dark)
+        {
+            var text = dark ? settings.Settings.AcrylicTintDark : settings.Settings.AcrylicTintLight;
+            var tint = new SolidColorBrush(AcrylicTint.ToColor(text, dark));
+            tint.Freeze();
+            acrylicTint = tint;
+        }
+
         private void ApplyMica(Window window)
         {
             try
             {
                 if (micaActive)
                 {
-                    if (!MicaBackdrop.Enable(window, Brushes.Transparent) &&
+                    if (!MicaBackdrop.Enable(window, acrylicActive ? acrylicTint : Brushes.Transparent, acrylicActive) &&
                         window.Background is SolidColorBrush brush && brush.Color.A == 0 &&
                         Application.Current.TryFindResource("WindowBackgroundColor") is Color color)
                     {
@@ -685,6 +701,7 @@ namespace Fluent11Helper
                     resources["ContentLayerBrush"] = contentLayer;
                 }
 
+                UpdateAcrylicTint(dark);
                 DefaultCover.Apply(themeDir, dark);
 
                 currentDark = dark;
